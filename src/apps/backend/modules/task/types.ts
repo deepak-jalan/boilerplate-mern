@@ -6,6 +6,12 @@ export class Task {
   account: string;
   description: string;
   title: string;
+  sharedTo: string[];
+}
+
+export class TaskShare {
+  account: string;
+  task: string;
 }
 
 export type GetAllTaskParams = {
@@ -34,6 +40,11 @@ export type UpdateTaskParams = {
 
 export type DeleteTaskParams = {
   accountId: string;
+  taskId: string;
+};
+
+export type ShareTaskParams = {
+  sharedTo?: string[];
   taskId: string;
 };
 

@@ -13,7 +13,10 @@ export default class TaskReader {
   public static async getTaskForAccount(params: GetTaskParams): Promise<Task> {
     const taskDb = await TaskRepository.findOne({
       _id: params.taskId,
-      account: params.accountId,
+      $or: [
+        { account: params.accountId }, 
+        { sharedTo: { $in: [params.accountId] } }
+      ],
       active: true,
     });
     if (!taskDb) {
@@ -25,7 +28,10 @@ export default class TaskReader {
 
   public static async getTasksForAccount(params: GetAllTaskParams): Promise<Task []> {
     const totalTasksCount = await TaskRepository.countDocuments({
-      account: params.accountId,
+      $or: [
+        { account: params.accountId }, 
+        { sharedTo: { $in: [params.accountId] } }
+      ],
       active: true,
     });
     const paginationParams: PaginationParams = {
@@ -35,7 +41,13 @@ export default class TaskReader {
     const startIndex = (paginationParams.page - 1) * (paginationParams.size);
 
     const tasksDb = await TaskRepository
-      .find({ account: params.accountId, active: true })
+      .find({ 
+        $or: [
+          { account: params.accountId }, 
+          { sharedTo: { $in: [params.accountId] } }
+        ], 
+        active: true 
+      })
       .limit(paginationParams.size)
       .skip(startIndex);
 
