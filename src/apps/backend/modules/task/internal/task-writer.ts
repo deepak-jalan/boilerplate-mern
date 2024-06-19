@@ -1,12 +1,16 @@
+import { Types } from 'mongoose';
 import {
   CreateTaskParams,
   DeleteTaskParams,
   Task,
+  TaskShare,
   TaskNotFoundError,
   UpdateTaskParams,
+  ShareTaskParams
 } from '../types';
 
 import TaskRepository from './store/task-repository';
+import TaskShareRepository from './store/task-share-repository';
 import TaskReader from './task-reader';
 import TaskUtil from './task-util';
 
@@ -43,6 +47,39 @@ export default class TaskWriter {
 
     return TaskUtil.convertTaskDBToTask(task);
   }
+
+  public static async shareTask(params: ShareTaskParams): Promise<Task> {
+    const sharedTo: Types.ObjectId[] = params.sharedTo.map(id => new Types.ObjectId(id));
+
+    const task = await TaskRepository.findOneAndUpdate(
+      {
+        _id: params.taskId,
+        active: true,
+      },
+      {
+        $addToSet: { sharedTo: { $each: sharedTo } },
+      },
+      { new: true }
+    );
+    
+    if (!task) {
+      throw new TaskNotFoundError(params.taskId);
+    }
+
+    const taskShares: TaskShare[] = [];
+    for (const sharedAccountId of params.sharedTo) {
+      const taskShare: TaskShare = {
+        task: params.taskId,
+        account: sharedAccountId,
+      };
+      taskShares.push(taskShare);
+    }
+    await TaskShareRepository.insertMany(taskShares);
+
+    return TaskUtil.convertTaskDBToTask(task);
+  }
+
+
 
   public static async deleteTask(params: DeleteTaskParams): Promise<void> {
     const task = await TaskReader.getTaskForAccount({

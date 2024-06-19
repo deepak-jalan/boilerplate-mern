@@ -14,6 +14,7 @@ export default class TaskRouter extends ApplicationRouter {
     router.get('/', ctrl.getTasks);
     router.get('/:id', ctrl.getTask);
     router.patch('/:id', ctrl.updateTask);
+    router.patch('/share/:id', ctrl.shareTask);
     router.delete('/:id', ctrl.deleteTask);
   }
 }
